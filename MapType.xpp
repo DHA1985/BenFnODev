@@ -1,0 +1,33 @@
+internal final class CRUD02
+{
+    /// <summary>
+    /// Class entry point. The system will call this method when a designated menu 
+    /// is selected or when execution starts and this class is set as the startup class.
+    /// </summary>
+    /// <param name = "_args">The specified arguments.</param>
+    
+    public static void main(Args _args)
+    {
+        // Declare a Map with str as key and int as value
+        Map myMap = new Map(Types::String, Types::Integer);
+ 
+        // Add key-value pairs
+        myMap.insert("Apple", 10);
+        myMap.insert("Banana", 20);
+        myMap.insert("Orange", 15);
+ 
+        // Retrieve a value by key
+        int appleCount = myMap.lookup("Apple");
+        info(strFmt("Apple count: %1", appleCount));
+ 
+        // Iterate through all keys and values
+        MapEnumerator enumerator = myMap.getEnumerator();
+        while (enumerator.moveNext())
+        {
+            str key = enumerator.currentKey();
+            int value = enumerator.currentValue();
+            info(strFmt("Fruit: %1, Count: %2", key, value));
+        }
+    }
+
+}
