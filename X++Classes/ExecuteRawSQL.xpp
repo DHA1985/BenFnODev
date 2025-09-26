@@ -1,0 +1,124 @@
+internal final class Ben_Location_Work
+{
+   
+            public static void main(Args _args)
+        {
+            info("Running, please wait for it");
+            Ben_Location_Work::RunLocationSQLQuery_CurrentCompany();
+            info("Completed");
+        }
+
+        static void RunLocationSQLQuery_CurrentCompany()
+        {
+            str sql;
+            str company;
+            company = curExt();
+            str locationProfile = 'USER';
+ 
+            Connection con = new Connection();
+            Statement stmt;
+            ResultSet rs;
+ 
+            sql = strFmt(@"
+        SELECT INVENTLOCATIONID as warehouseid, WMSLOCATIONID
+        FROM WMSLOCATION W
+        WHERE
+            W.DATAAREAID = '%1' AND
+            W.LocProfileId = '%2' AND
+ 
+            NOT EXISTS (
+                SELECT 1 FROM InventSum I
+                WHERE
+                    I.WMSLocationId = W.WMSLocationId AND
+                    I.InventLocationId = W.InventLocationId AND
+                    I.AvailPhysical > 0
+            ) AND
+ 
+            NOT EXISTS (
+                SELECT 1 FROM WHSWorkLine L, WHSWorkTable T
+                WHERE
+                    L.WorkId = T.WorkId AND
+                    L.WorkStatus = 0 AND
+                    L.WMSLocationId = W.WMSLocationId AND
+                    T.InventLocationId = W.InventLocationId AND
+                    T.DataAreaId = '%1'
+            ) AND
+ 
+            NOT EXISTS (
+                SELECT 1 FROM WHSInventTransAndWarehouseTransactionView WV
+                WHERE
+                    WV.WMSLocationId = W.WMSLocationId AND
+                    WV.InventLocationId = W.InventLocationId AND
+                    WV.DataAreaId = '%1'
+            )
+    ", company, locationProfile);
+ 
+            stmt = con.createStatement();
+            rs = stmt.executeQuery(sql);
+ 
+            while (rs.next())
+            {
+                str warehouseId = rs.getString(1); // INVENTLOCATIONID
+                str locationId  = rs.getString(2); // WMSLOCATIONID
+ 
+                info(strFmt("Safe Location → Warehouse: %1, Location: %2", warehouseId, locationId));
+            }
+        }
+
+        static void RunLocationSQLQuery()
+        {
+            str sql;
+            str company = 'usmf';
+            str locationProfile = 'USER';
+ 
+            Connection con = new Connection();
+            Statement stmt;
+            ResultSet rs;
+ 
+            sql = strFmt(@"
+        SELECT INVENTLOCATIONID as warehouseid, WMSLOCATIONID
+        FROM WMSLOCATION W
+        WHERE
+            W.DATAAREAID = '%1' AND
+            W.LocProfileId = '%2' AND
+ 
+            NOT EXISTS (
+                SELECT 1 FROM InventSum I
+                WHERE
+                    I.WMSLocationId = W.WMSLocationId AND
+                    I.InventLocationId = W.InventLocationId AND
+                    I.AvailPhysical > 0
+            ) AND
+ 
+            NOT EXISTS (
+                SELECT 1 FROM WHSWorkLine L, WHSWorkTable T
+                WHERE
+                    L.WorkId = T.WorkId AND
+                    L.WorkStatus = 0 AND
+                    L.WMSLocationId = W.WMSLocationId AND
+                    T.InventLocationId = W.InventLocationId AND
+                    T.DataAreaId = '%1'
+            ) AND
+ 
+            NOT EXISTS (
+                SELECT 1 FROM WHSInventTransAndWarehouseTransactionView WV
+                WHERE
+                    WV.WMSLocationId = W.WMSLocationId AND
+                    WV.InventLocationId = W.InventLocationId AND
+                    WV.DataAreaId = '%1'
+            )
+    ", company, locationProfile);
+ 
+            stmt = con.createStatement();
+            rs = stmt.executeQuery(sql);
+ 
+            while (rs.next())
+            {
+                str warehouseId = rs.getString(1); // INVENTLOCATIONID
+                str locationId  = rs.getString(2); // WMSLOCATIONID
+ 
+                info(strFmt("Safe Location → Warehouse: %1, Location: %2", warehouseId, locationId));
+            }
+        }
+
+}
