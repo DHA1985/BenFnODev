@@ -1,0 +1,125 @@
+internal final class InventItemBatchUpdate
+{
+
+
+    public static void main(Args _args)
+    {
+        Info("Updating");
+        InventItemBatchUpdate obj = new InventItemBatchUpdate();
+        obj.doUpdate_2(obj.GetList());
+        Info("Completed");
+    }
+
+    public List GetList()
+    {
+        List myList = new List(Types::Container);
+        container row;
+        row = ["140127-000003", "D0111", "10/8/2025", "10/6/2026"]; myList.addEnd(row);
+        row = ["140121-000001", "M0061", "10/8/2025au", "10/6/2026"]; myList.addEnd(row);
+        row = ["180411-000006", "M0061", "10/8/2025", "10/6/2026"]; myList.addEnd(row);
+        row = ["180424-000007", "M0061", "10/8/2025", "10/6/2026"]; myList.addEnd(row);
+        row = ["140122-000002", "P0111", "10/8/2025", "10/6/2026"]; myList.addEnd(row);
+        info(strFmt("Added %1 rows to the list.", myList.elements()));
+        return myList;
+    }
+
+    public void doUpdate_2(List mylist)
+    {
+        InventBatch inventbatch;
+        ListEnumerator le = mylist.getEnumerator();
+        int updatedCount = 0;
+        int skippedCount = 0;
+        int errorcount = 0;
+        str Company = curExt();
+        ttsbegin;
+       
+            while(le.moveNext())
+            {
+                container currenttRow = le.current();
+                str inventBatchID = conPeek(currenttRow, 1);
+                str itemID = conPeek(currenttRow,2);
+                str manDate = conPeek(currenttRow,3);
+                str bestDate = conPeek(currenttRow,4);
+                try
+                {
+                    date dManDate = str2Date(manDate,123);
+                    date dBestDate = str2Date(bestDate, 123);
+                
+                    // inventbatch = InventBatch::find(inventBatchID, itemID, true); //because I need to include datAreaID so need to use another method
+                    inventbatch = InventBatch::find(inventBatchID, itemID, true);
+                    //select forupdate inventbatch
+                    //    where inventbatch.DataAreaId == Company;
+                    if(inventbatch)
+                    {
+                        inventbatch.PdsBestBeforeDate = dBestDate;
+                        inventbatch.prodDate = dManDate;
+                        inventbatch.doUpdate();
+                        updatedCount++;
+                    }
+                    else
+                    {
+                        warning(strFmt("InventBatch not found for ItemID: %1, BatchID: %2", itemID, inventBatchID));
+                        skippedCount++;
+                    }
+                }
+                catch (Exception::Error)
+                {
+                    errorcount++;
+                    error(strFmt("⚠️ Error updating: ItemID=%1, BatchID=%2", itemID, inventBatchID));
+                }
+
+           
+             }
+        ttscommit;
+    }
+
+    public void doUpdate(List mylist)
+    {
+        InventBatch inventbatch;
+        ListEnumerator le = mylist.getEnumerator();
+        int updatedCount = 0;
+        int skippedCount = 0;
+        int errorcount = 0;
+        str Company = curExt();
+        ttsbegin;
+        while(le.moveNext())
+        {
+            container currenttRow = le.current();
+            str inventBatchID = conPeek(currenttRow, 1);
+            str itemID = conPeek(currenttRow,2);
+            str manDate = conPeek(currenttRow,3);
+            str bestDate = conPeek(currenttRow,4);
+            try
+            {
+                date dManDate = str2Date(manDate,123);
+                date dBestDate = str2Date(bestDate, 123);
+                
+               // inventbatch = InventBatch::find(inventBatchID, itemID, true); //because I need to include datAreaID so need to use another method
+                inventbatch = InventBatch::find(inventBatchID, itemID, false);
+                select forupdate inventbatch
+                    where inventbatch.DataAreaId == Company;
+                if(inventbatch)
+                {
+                    inventbatch.PdsBestBeforeDate = dBestDate;
+                    inventbatch.prodDate = dManDate;
+                    inventbatch.doUpdate();
+                    updatedCount++;
+                }
+                else
+                {
+                    warning(strFmt("InventBatch not found for ItemID: %1, BatchID: %2", itemID, inventBatchID));
+                    skippedCount++;
+                }
+            }
+            catch (Exception::Error)
+            {
+                errorcount++;
+                error(strFmt("⚠️ Error updating: ItemID=%1, BatchID=%2", itemID, inventBatchID));
+            }
+
+        }
+        
+        ttscommit;
+    }
+
+}
