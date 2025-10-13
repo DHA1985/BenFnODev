@@ -1,0 +1,95 @@
+internal final class Update_PDSBestBeforeDate_251013744
+{
+    /// <summary>
+    /// Class entry point. The system will call this method when a designated menu 
+    /// is selected or when execution starts and this class is set as the startup class.
+    /// </summary>
+    /// <param name = "_args">The specified arguments.</param>
+    /// <summary>
+    /// Class entry point. The system will call this method when a designated menu
+    /// is selected or when execution starts and this class is set as the startup class.
+    /// </summary>
+    /// <param name = "_args">The specified arguments.</param>
+    //Created by Ben Dau
+    // Purpose: Update Best Before Date for batch production ID and item ID
+    // via data entity, this field is ready only and it does not allow to update via excel add-in
+
+    public static void main(Args _args)
+    {
+        Info("Updating BestBeforDate date");
+        Update_PDSBestBeforeDate_251013744 obj = new Update_PDSBestBeforeDate_251013744();
+        obj.doUpdate_BestBeforeDate(obj.GetList_BestBeforDate());
+        //obj.doUpdate_BestBeforeDate(obj.GetList_BestBeforDate());
+        Info("Completed");
+    }
+
+    private List GetList_BestBeforDate()
+    {
+        List myList = new List(Types::Container);
+        container row;
+        row = ["MMH022037", "PR02788", "20/1/2026"]; myList.addEnd(row);
+        row = ["MMH022149", "PR02691", "2/2/2026"]; myList.addEnd(row);
+        row = ["MMH022151", "PR02789", "2/2/2026"]; myList.addEnd(row);
+        row = ["MMH022151", "PR02841", "2/2/2026"]; myList.addEnd(row);
+        row = ["MMH022151", "PR03142", "2/2/2026"]; myList.addEnd(row);
+        row = ["MMH022153", "PR02691", "2/2/2026"]; myList.addEnd(row);
+        row = ["MMH022157", "PR02786", "8/2/2026"]; myList.addEnd(row);
+        row = ["MMH022157", "PR02811", "8/2/2026"]; myList.addEnd(row);
+        row = ["MMH022176", "PR02786", "9/2/2026"]; myList.addEnd(row);
+        row = ["MMH022178", "PR02788", "13/2/2026"]; myList.addEnd(row);
+
+
+        info(strFmt("Added %1 rows to the list.", myList.elements()));
+        return myList;
+    }
+
+    private void doUpdate_BestBeforeDate(List mylist)
+    {
+        InventBatch inventbatch;
+        ListEnumerator le = mylist.getEnumerator();
+        int updatedCount = 0;
+        int skippedCount = 0;
+        int errorcount = 0;
+        str Company = curExt();
+        ttsbegin;
+       
+        while(le.moveNext())
+        {
+            container currenttRow = le.current();
+            str inventBatchID = conPeek(currenttRow, 1);
+            str itemID = conPeek(currenttRow,2);
+            str bestDate = conPeek(currenttRow,3);
+            try
+            {
+               
+                date dBestDate = str2Date(bestDate, 1);
+                   
+                inventbatch = InventBatch::find(inventBatchID, itemID, true);
+                if(inventbatch)
+                {
+                    inventbatch.PdsBestBeforeDate = dBestDate;
+                    inventbatch.doUpdate();
+                    Info(strFmt("Updated BestBeforeDate %1 for ItemID: %2, BatchID: %3",dBestDate,  itemID, inventBatchID));
+                    updatedCount++;
+                }
+                else
+                {
+                    warning(strFmt("InventBatch not found for ItemID: %1, BatchID: %2", itemID, inventBatchID));
+                    skippedCount++;
+                }
+            }
+            catch (Exception::Error)
+            {
+                errorcount++;
+                error(strFmt("Error updating: ItemID=%1, BatchID=%2", itemID, inventBatchID));
+            }
+
+           
+        }
+        ttscommit;
+        
+        // Summary log
+        info(strFmt("Update Summary: %1 updated, %2 skipped: not found, %3 errors.", updatedCount, skippedCount, errorCount));
+    }
+
+}
