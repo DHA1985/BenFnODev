@@ -20,3 +20,14 @@ select distinct REFERENCECATEGORY from INVENTTRANSORIGIN
 
 
 select * from INVENTTRANSORIGIN
+
+
+
+use AxDB
+
+
+select * from purchtable where purchid = '00000175' and DATAAREAid = 'usmf'
+
+select recID from INVENTTRANSORIGIN where REFERENCEID = '00000175' and DATAAREAid = 'usmf' --RecID will be Inventtransorigin in INVENTTRANSORIGINPURCHLINE and inventtrans
+select * from INVENTTRANSORIGINPURCHLINE where INVENTTRANSORIGIN = '68720175413'
+select * from INVENTTRANS where INVENTTRANSORIGIN = '68720175413'  and DATAAREAid = 'usmf'
