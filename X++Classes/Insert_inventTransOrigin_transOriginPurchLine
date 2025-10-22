@@ -1,0 +1,72 @@
+internal final class UpdatePO_2510030030000917
+{
+    /// <summary>
+    /// Class entry point. The system will call this method when a designated menu 
+    /// is selected or when execution starts and this class is set as the startup class.
+    /// </summary>
+    /// <param name = "_args">The specified arguments.</param>
+    public static void main(Args _args)
+    {
+        UpdatePO_2510030030000917::doAction();
+    }
+
+    public static void doAction()
+    {
+        PurchLine purchaseline;
+        str sPurchID = "PAR.PO250124";
+        str itemIdUpdate = "ELE0296";
+        str itemIdDelete = "I07010000";
+        str inventTransID1 ="PAR-006234";
+        //str sPurchID = "00000320";
+        //str itemIdUpdate = "M0030";
+        //str itemIdDelete = "M0050";
+        //str inventTransID1 ="012993";
+        InventTransOrigin inventTransOrigin;
+        InventTransOriginPurchLine transOriginPurchLine;
+
+        //delete hidden item
+        ttsbegin;
+        select firstonly forupdate purchaseline
+           where purchaseline.PurchId==sPurchID && purchaseline.ItemId==itemIdDelete && purchaseline.DataAreaId == curExt();
+
+        if(purchaseline)
+        {
+            purchaseline.doDelete();
+            Info(strFmt("deleted the item: %1 in purchase order: %2", itemIdDelete, sPurchID));
+        }
+          
+        ttscommit;
+
+        //insert new data
+        ttsbegin;
+        select firstonly inventTransOrigin
+            where inventTransOrigin.ReferenceId ==sPurchID && inventTransOrigin.InventTransId == inventTransID1
+              &&  inventTransOrigin.ItemId ==itemIdUpdate;
+
+        if(!inventTransOrigin)
+        {
+            inventTransOrigin.ReferenceId = sPurchID;
+            inventTransOrigin.InventTransId = inventTransID1;
+            inventTransOrigin.ReferenceCategory = 3;
+            inventTransOrigin.ItemId = itemIdUpdate;            
+            inventTransOrigin.doInsert();
+            Info(strFmt("successful insert to inventTransOrigin with item  : %1 in purchase order: %2", itemIdUpdate, sPurchID));
+            RefRecId transOriginRecId = inventTransOrigin.RecId;
+
+            if (transOriginRecId)
+            {
+                transOriginPurchLine.InventTransOrigin = transOriginRecId;
+                transOriginPurchLine.PurchLineInventTransId = inventTransID1;
+                transOriginPurchLine.PurchLineDataAreaId = curExt();
+                transOriginPurchLine.doInsert();
+                Info(strFmt("successful insert to InventTransOriginPurchLine with InventTransOrigin  : %1 in InventTransID: %2", transOriginRecId, inventTransID1));
+            }
+        }
+        else
+            Info(strFmt("This record already exists in inventTransOrigin"));
+
+        ttscommit;          
+
+    }
+
+}
